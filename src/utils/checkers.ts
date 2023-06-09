@@ -1,5 +1,5 @@
 import { completedQuests } from '../repositories/quest';
-import { AccessConditionComparaison, Quest } from '../types/quest';
+import { AccessConditionComparaison, AccessConditionContains, Quest } from '../types/quest';
 
 export function checkScore(score: number): boolean {
   return score >= 5;
@@ -39,8 +39,12 @@ export function checkAccessConditionNFT(
     return true;
   }
 
-  const nftFound = quest.user_data.nfts.includes(accessConditionNFT.value);
-  return accessConditionNFT.operator === 'contains' ? nftFound : !nftFound;
+  // i have refactored this into it's own function
+  return contains(
+    (accessConditionNFT as AccessConditionContains).operator,
+    quest.user_data.nfts,
+    accessConditionNFT.value,
+  );
 }
 
 export function checkAccessConditionDate(
@@ -86,4 +90,15 @@ export function executeOperator<T extends Date | number>(
 ): boolean {
   // if tomorrow we add more operators, we can easily handle them here, so ternaire is ok for now
   return operator === '>' ? leftOperand > rigtOperand : leftOperand < rigtOperand;
+}
+
+// should also be unit tested
+export function contains(
+  operator: AccessConditionContains['operator'],
+  array: string[],
+  value: string,
+): boolean {
+  const found = array.includes(value);
+
+  return operator === 'contains' ? found : !found;
 }
